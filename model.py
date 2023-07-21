@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from exceptions import NoMoreOrders
+import uuid
 
 
 @dataclass(frozen=True)
@@ -8,6 +9,7 @@ class Order:
     sell: bool
     amount: int
     price: float
+    order_id: str
 
 
 class Spread:
@@ -52,7 +54,9 @@ class Spread:
     ):
         amounts = self._distribute_amounts(positions_to_distribute)
         result = [
-            Order(self._spread_id, sell, amount, price)
+            Order(
+                self._spread_id, sell, amount, price, self._generate_order_id()
+            )
             for amount, price in zip(amounts, prices[: len(amounts)])
         ]
         return result
@@ -71,7 +75,9 @@ class Spread:
 
         reversed_prices = prices[::-1]
         result = [
-            Order(self._spread_id, sell, amount, price)
+            Order(
+                self._spread_id, sell, amount, price, self._generate_order_id()
+            )
             for amount, price in zip(
                 reversed_amounts,
                 reversed_prices[: len(reversed_amounts)],
@@ -87,6 +93,9 @@ class Spread:
         if distributed < amount:
             amounts.append(amount - distributed)
         return amounts
+
+    def _generate_order_id(self):
+        return str(uuid.uuid4())
 
     def generate_sell_order(self):
         try:

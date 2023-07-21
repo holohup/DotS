@@ -21,6 +21,20 @@ def spread(spread_creds):
     return Spread(*spread_creds)
 
 
+def all_order_fields_except_id_match(
+    order: Order, order_id: str, sell: bool, amount: int, price: float
+):
+    return all(
+        (
+            isinstance(order, Order),
+            order.spread_id == order_id,
+            order.sell == sell,
+            order.amount == amount,
+            order.price == price,
+        )
+    )
+
+
 def test_correct_orders_after_init_without_open_positions(
     spread: Spread,
 ):
@@ -30,11 +44,19 @@ def test_correct_orders_after_init_without_open_positions(
         expected_sell_price,
         expected_sell_amount,
     ) in ((0.0, 3, 4.5, 3), (-0.5, 2, 5.0, 2), (-1.0, 1, 5.5, 1)):
-        assert spread.generate_sell_order() == Order(
-            spread._spread_id, True, expected_sell_amount, expected_sell_price
+        assert all_order_fields_except_id_match(
+            spread.generate_sell_order(),
+            spread._spread_id,
+            True,
+            expected_sell_amount,
+            expected_sell_price,
         )
-        assert spread.generate_buy_order() == Order(
-            spread._spread_id, False, expected_buy_amount, expected_buy_price
+        assert all_order_fields_except_id_match(
+            spread.generate_buy_order(),
+            spread._spread_id,
+            False,
+            expected_buy_amount,
+            expected_buy_price,
         )
 
 
@@ -76,11 +98,19 @@ def test_correct_next_orders_if_initialized_with_open_positions(
     spread_creds, open_pos, sell_price, sell_amount, buy_price, buy_amount
 ):
     spread = Spread(*spread_creds, open_positions=open_pos)
-    assert spread.generate_buy_order() == Order(
-        spread_creds[0], False, buy_amount, buy_price
+    assert all_order_fields_except_id_match(
+        spread.generate_buy_order(),
+        spread_creds[0],
+        False,
+        buy_amount,
+        buy_price,
     )
-    assert spread.generate_sell_order() == Order(
-        spread_creds[0], True, sell_amount, sell_price
+    assert all_order_fields_except_id_match(
+        spread.generate_sell_order(),
+        spread_creds[0],
+        True,
+        sell_amount,
+        sell_price,
     )
 
 
