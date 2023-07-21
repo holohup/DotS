@@ -15,6 +15,7 @@ def spread_creds():
     max_amount = 6
     return spread_id, buy_levels, sell_levels, max_amount
 
+
 @pytest.fixture
 def spread(spread_creds):
     return Spread(*spread_creds)
@@ -61,8 +62,23 @@ def test_update_open_positions_negative_works(
     assert spread.generate_sell_order().amount == expected_sell_amount
 
 
-def test_correct_next_orders_if_initialized_with_open_positions(spread_creds):
-    spread_id, buy_levels, sell_levels, max_amount = spread_creds
-    spread = Spread(*spread_creds, open_positions=-3)
-    assert spread.generate_buy_order() == Order(spread_id, False, 4, 0.0)
-    assert spread.generate_sell_order() == Order(spread_id, True, 2, 5.0)
+@pytest.mark.parametrize(
+    ('open_pos', 'sell_price', 'sell_amount', 'buy_price', 'buy_amount'),
+    (
+        (-3, 5.0, 2, 0.0, 4),
+        (-5, 5.5, 1, 0.0, 5),
+        (3, 4.5, 4, -0.5, 2),
+        (4, 4.5, 5, -0.5, 1),
+        (5, 4.5, 5, -1.0, 1),
+    ),
+)
+def test_correct_next_orders_if_initialized_with_open_positions(
+    spread_creds, open_pos, sell_price, sell_amount, buy_price, buy_amount
+):
+    spread = Spread(*spread_creds, open_positions=open_pos)
+    assert spread.generate_buy_order() == Order(
+        spread_creds[0], False, buy_amount, buy_price
+    )
+    assert spread.generate_sell_order() == Order(
+        spread_creds[0], True, sell_amount, sell_price
+    )
