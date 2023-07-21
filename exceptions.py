@@ -1,0 +1,2 @@
+class NoMoreOrders(Exception):
+    pass
