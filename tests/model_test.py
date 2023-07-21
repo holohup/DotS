@@ -1,24 +1,6 @@
-from datetime import datetime
 from model import Spread, Order
-from tools import id_factory
 import pytest
 from exceptions import NoMoreOrders
-
-
-@pytest.fixture
-def spread_creds():
-    buy_levels = set((0.0, -0.5, -1.0))
-    sell_levels = set((4.5, 5.0, 5.5))
-    base_asset = 'gd'
-    expiration = datetime(2024, 7, 28)
-    spread_id = id_factory(base_asset, expiration)
-    max_amount = 6
-    return spread_id, buy_levels, sell_levels, max_amount
-
-
-@pytest.fixture
-def spread(spread_creds):
-    return Spread(*spread_creds)
 
 
 def all_order_fields_except_id_match(
@@ -46,14 +28,14 @@ def test_correct_orders_after_init_without_open_positions(
     ) in ((0.0, 3, 4.5, 3), (-0.5, 2, 5.0, 2), (-1.0, 1, 5.5, 1)):
         assert all_order_fields_except_id_match(
             spread.generate_sell_order(),
-            spread._spread_id,
+            spread.spread_id,
             True,
             expected_sell_amount,
             expected_sell_price,
         )
         assert all_order_fields_except_id_match(
             spread.generate_buy_order(),
-            spread._spread_id,
+            spread.spread_id,
             False,
             expected_buy_amount,
             expected_buy_price,

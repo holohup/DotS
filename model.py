@@ -23,7 +23,7 @@ class Spread:
         max_amount: int,
         open_positions: int = 0,
     ) -> None:
-        self._spread_id = spread_id
+        self.spread_id = spread_id
         self._buy_prices = list(sorted(buy_prices, reverse=True))
         self._sell_prices = list(sorted(sell_prices))
         self._buy_orders = self._sell_orders = []
@@ -55,7 +55,7 @@ class Spread:
         amounts = self._distribute_amounts(positions_to_distribute)
         result = [
             Order(
-                self._spread_id, sell, amount, price, self._generate_order_id()
+                self.spread_id, sell, amount, price, self._generate_order_id()
             )
             for amount, price in zip(amounts, prices[: len(amounts)])
         ]
@@ -76,7 +76,7 @@ class Spread:
         reversed_prices = prices[::-1]
         result = [
             Order(
-                self._spread_id, sell, amount, price, self._generate_order_id()
+                self.spread_id, sell, amount, price, self._generate_order_id()
             )
             for amount, price in zip(
                 reversed_amounts,
