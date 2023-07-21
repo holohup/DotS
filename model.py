@@ -50,29 +50,17 @@ class Spread:
     def _generate_orders_with_not_lesser_amount(
         self, prices, positions_to_distribute, sell: bool
     ):
-        amounts = [
-            positions_to_distribute // divider
-            for divider in self.positions_distribution
-        ]
-        distributed = sum(amounts)
-        if distributed < positions_to_distribute:
-            amounts.append(positions_to_distribute - distributed)
+        amounts = self._distribute_amounts(positions_to_distribute)
         result = [
             Order(self._spread_id, sell, amount, price)
-            for amount, price in zip(amounts, prices)
+            for amount, price in zip(amounts, prices[: len(amounts)])
         ]
         return result
 
     def _generate_orders_with_less_amount(
         self, prices, positions_to_distribute, sell: bool
     ):
-        regular_amounts = [
-            self._max_amount // divider
-            for divider in self.positions_distribution
-        ]
-        distributed = sum(regular_amounts)
-        if distributed < self._max_amount:
-            regular_amounts.append(self._max_amount - distributed)
+        regular_amounts = self._distribute_amounts(self._max_amount)
         reversed_amounts = []
         undistributed_positions = positions_to_distribute
         for ra in regular_amounts[::-1]:
@@ -89,8 +77,16 @@ class Spread:
                 reversed_prices[: len(reversed_amounts)],
             )
         ][::-1]
-        print(result)
         return result
+
+    def _distribute_amounts(self, amount):
+        amounts = [
+            amount // divider for divider in self.positions_distribution
+        ]
+        distributed = sum(amounts)
+        if distributed < amount:
+            amounts.append(amount - distributed)
+        return amounts
 
     def generate_sell_order(self):
         try:

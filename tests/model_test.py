@@ -82,3 +82,14 @@ def test_correct_next_orders_if_initialized_with_open_positions(
     assert spread.generate_sell_order() == Order(
         spread_creds[0], True, sell_amount, sell_price
     )
+
+
+def test_correct_orders_generated_on_init_with_all_spreads(spread_creds):
+    spread = Spread(*spread_creds, open_positions=6)
+    assert spread.generate_sell_order().amount == 6
+    with pytest.raises(NoMoreOrders):
+        spread.generate_buy_order()
+    spread = Spread(*spread_creds, open_positions=-6)
+    assert spread.generate_buy_order().amount == 6
+    with pytest.raises(NoMoreOrders):
+        spread.generate_sell_order()
