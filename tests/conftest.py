@@ -6,8 +6,8 @@ from model import Spread
 
 @pytest.fixture
 def spread_creds():
-    buy_levels = set((0.0, -0.5, -1.0))
-    sell_levels = set((4.5, 5.0, 5.5))
+    buy_levels = (0.0, -0.5, -1.0)
+    sell_levels = (4.5, 5.0, 5.5)
     base_asset = 'gd'
     expiration = datetime(2024, 7, 28)
     spread_id = id_factory(base_asset, expiration)

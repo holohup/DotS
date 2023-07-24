@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from exceptions import NoMoreOrders
+from exceptions import NoMoreOrders, MaxAmountTooSmall
 import uuid
+from collections.abc import Iterable
 
 
 @dataclass(frozen=True)
@@ -12,19 +13,21 @@ class Order:
     order_id: str = 'undefined'
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, Order):
+            return False
         attribs_eq = [
             getattr(self, a) == getattr(other, a)
             for a in ('spread_id', 'sell', 'amount', 'price')
         ]
-        return all(attribs_eq) and isinstance(other, Order)
+        return all(attribs_eq)
 
 
 class Spread:
     def __init__(
         self,
         spread_id: str,
-        buy_prices: set[int],
-        sell_prices: set[int],
+        buy_prices: Iterable[int],
+        sell_prices: Iterable[int],
         max_amount: int,
         open_positions: int = 0,
     ) -> None:
@@ -34,11 +37,14 @@ class Spread:
         self._buy_orders = self._sell_orders = []
         self._max_amount = max_amount
         self._open_positions = open_positions
+        self._validate_fields()
 
     def update_open_positions(self, amount):
-        if amount == 0:
-            return
         self._open_positions += amount
+
+    def _validate_fields(self):
+        if self._max_amount < 3:
+            raise MaxAmountTooSmall('Max amount should be > 2')
 
     @property
     def open_positions(self):
@@ -72,7 +78,6 @@ def generate_order(spread: Spread, sell: bool) -> Order:
     if total_amount >= spread.max_amount:
         amount = total_amount // 2
         price = prices[0]
-
     else:
         if total_amount < 1:
             raise NoMoreOrders('No more orders.')
@@ -82,10 +87,11 @@ def generate_order(spread: Spread, sell: bool) -> Order:
         undistributed_amount = total_amount
         reversed_amounts = []
         for ra in regular_amounts[::-1]:
-            amount = min(undistributed_amount, ra)
-            reversed_amounts.append(amount)
-            undistributed_amount -= amount
+            a = min(undistributed_amount, ra)
+            reversed_amounts.append(a)
+            undistributed_amount -= a
         for amount, price in zip(reversed_amounts[::-1], prices):
             if amount > 0:
                 break
+
     return Order(spread.spread_id, sell, amount, price, generate_order_id())
