@@ -9,12 +9,17 @@ class Order:
     sell: bool
     amount: int
     price: float
-    order_id: str
+    order_id: str = 'undefined'
+
+    def __eq__(self, other) -> bool:
+        attribs_eq = [
+            getattr(self, a) == getattr(other, a)
+            for a in ('spread_id', 'sell', 'amount', 'price')
+        ]
+        return all(attribs_eq) and isinstance(other, Order)
 
 
 class Spread:
-    positions_distribution = [2, 3]
-
     def __init__(
         self,
         spread_id: str,
@@ -29,88 +34,58 @@ class Spread:
         self._buy_orders = self._sell_orders = []
         self._max_amount = max_amount
         self._open_positions = open_positions
-        self._generate_orders()
-
-    def _generate_orders(self):
-        total_sells = self._max_amount + self._open_positions
-        total_buys = self._max_amount - self._open_positions
-        if self._open_positions >= 0:
-            self._sell_orders = self._generate_orders_with_not_lesser_amount(
-                self._sell_prices, total_sells, True
-            )
-            self._buy_orders = self._generate_orders_with_less_amount(
-                self._buy_prices, total_buys, False
-            )
-        else:
-            self._buy_orders = self._generate_orders_with_not_lesser_amount(
-                self._buy_prices, total_buys, False
-            )
-            self._sell_orders = self._generate_orders_with_less_amount(
-                self._sell_prices, total_sells, True
-            )
-
-    def _generate_orders_with_not_lesser_amount(
-        self, prices, positions_to_distribute, sell: bool
-    ):
-        amounts = self._distribute_amounts(positions_to_distribute)
-        result = [
-            Order(
-                self.spread_id, sell, amount, price, self._generate_order_id()
-            )
-            for amount, price in zip(amounts, prices[: len(amounts)])
-        ]
-        return result
-
-    def _generate_orders_with_less_amount(
-        self, prices, positions_to_distribute, sell: bool
-    ):
-        regular_amounts = self._distribute_amounts(self._max_amount)
-        reversed_amounts = []
-        undistributed_positions = positions_to_distribute
-        for ra in regular_amounts[::-1]:
-            amount = min(undistributed_positions, ra)
-            if amount > 0:
-                reversed_amounts.append(amount)
-                undistributed_positions -= amount
-
-        reversed_prices = prices[::-1]
-        result = [
-            Order(
-                self.spread_id, sell, amount, price, self._generate_order_id()
-            )
-            for amount, price in zip(
-                reversed_amounts,
-                reversed_prices[: len(reversed_amounts)],
-            )
-        ][::-1]
-        return result
-
-    def _distribute_amounts(self, amount):
-        amounts = [
-            amount // divider for divider in self.positions_distribution
-        ]
-        distributed = sum(amounts)
-        if distributed < amount:
-            amounts.append(amount - distributed)
-        return amounts
-
-    def _generate_order_id(self):
-        return str(uuid.uuid4())
-
-    def generate_sell_order(self):
-        try:
-            return self._sell_orders.pop(0)
-        except IndexError:
-            raise NoMoreOrders('No more sell orders.')
-
-    def generate_buy_order(self):
-        try:
-            return self._buy_orders.pop(0)
-        except IndexError:
-            raise NoMoreOrders('No more buy orders.')
 
     def update_open_positions(self, amount):
         if amount == 0:
             return
         self._open_positions += amount
-        self._generate_orders()
+
+    @property
+    def open_positions(self):
+        return self._open_positions
+
+    @property
+    def max_amount(self):
+        return self._max_amount
+
+    @property
+    def sell_prices(self):
+        return self._sell_prices
+
+    @property
+    def buy_prices(self):
+        return self._buy_prices
+
+
+def generate_order_id():
+    return str(uuid.uuid4())
+
+
+def generate_order(spread: Spread, sell: bool) -> Order:
+    if sell:
+        total_amount = spread.max_amount + spread.open_positions
+        prices = spread.sell_prices
+    else:
+        total_amount = spread.max_amount - spread.open_positions
+        prices = spread.buy_prices
+
+    if total_amount >= spread.max_amount:
+        amount = total_amount // 2
+        price = prices[0]
+
+    else:
+        if total_amount < 1:
+            raise NoMoreOrders('No more orders.')
+
+        regular_amounts = [spread.max_amount // 2, spread.max_amount // 3]
+        regular_amounts.append(spread.max_amount - sum(regular_amounts))
+        undistributed_amount = total_amount
+        reversed_amounts = []
+        for ra in regular_amounts[::-1]:
+            amount = min(undistributed_amount, ra)
+            reversed_amounts.append(amount)
+            undistributed_amount -= amount
+        for amount, price in zip(reversed_amounts[::-1], prices):
+            if amount > 0:
+                break
+    return Order(spread.spread_id, sell, amount, price, generate_order_id())
