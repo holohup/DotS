@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from exceptions import NoMoreOrders, MaxAmountTooSmall
+from exceptions import MaxAmountTooSmall
 from collections.abc import Iterable
-from domain.tools import generate_order_id
 
 
 @dataclass(frozen=True)
@@ -61,33 +60,3 @@ class Spread:
     @property
     def buy_prices(self):
         return self._buy_prices
-
-
-def generate_order(spread: Spread, sell: bool) -> Order:
-    if sell:
-        total_amount = spread.max_amount + spread.open_positions
-        prices = spread.sell_prices
-    else:
-        total_amount = spread.max_amount - spread.open_positions
-        prices = spread.buy_prices
-
-    if total_amount >= spread.max_amount:
-        amount = total_amount // 2
-        price = prices[0]
-    else:
-        if total_amount < 1:
-            raise NoMoreOrders('No more orders.')
-
-        regular_amounts = [spread.max_amount // 2, spread.max_amount // 3]
-        regular_amounts.append(spread.max_amount - sum(regular_amounts))
-        undistributed_amount = total_amount
-        reversed_amounts = []
-        for ra in regular_amounts[::-1]:
-            a = min(undistributed_amount, ra)
-            reversed_amounts.append(a)
-            undistributed_amount -= a
-        for amount, price in zip(reversed_amounts[::-1], prices):
-            if amount > 0:
-                break
-
-    return Order(spread.spread_id, sell, amount, price, generate_order_id())
