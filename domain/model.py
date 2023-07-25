@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from exceptions import NoMoreOrders, MaxAmountTooSmall
-import uuid
 from collections.abc import Iterable
+from domain.tools import generate_order_id
 
 
 @dataclass(frozen=True)
@@ -61,10 +61,6 @@ class Spread:
     @property
     def buy_prices(self):
         return self._buy_prices
-
-
-def generate_order_id():
-    return str(uuid.uuid4())
 
 
 def generate_order(spread: Spread, sell: bool) -> Order:

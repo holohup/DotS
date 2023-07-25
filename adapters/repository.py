@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from model import Spread
+from domain.model import Spread
 
 
 class AbstractRepository(ABC):

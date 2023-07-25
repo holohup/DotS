@@ -1,4 +1,4 @@
-from model import Spread, Order, generate_order
+from domain.model import Spread, Order, generate_order
 import pytest
 from exceptions import NoMoreOrders, MaxAmountTooSmall
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytest
-from tools import id_factory
-from model import Spread
+from domain.tools import id_factory
+from domain.model import Spread
 
 
 @pytest.fixture
