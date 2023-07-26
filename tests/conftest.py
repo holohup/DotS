@@ -1,7 +1,8 @@
 from datetime import datetime
-from adapters import repository
+
 import pytest
 
+from adapters import repository
 from domain.model import Spread
 from domain.tools import generate_spread_id
 

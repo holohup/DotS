@@ -1,5 +1,5 @@
 from adapters.repository import AbstractRepository
-from domain.model import generate_buy_order, generate_sell_order, Spread
+from domain.model import Spread, generate_buy_order, generate_sell_order
 
 
 class SpreadNotFound(Exception):
@@ -30,3 +30,8 @@ def add_spread(
     repo.add(
         Spread(spread_id, buy_prices, sell_prices, max_amount, open_positions)
     )
+
+
+def update_open_positions(repo, spread_id, amount):
+    spread = repo.get(spread_id)
+    spread.update_open_positions(amount)

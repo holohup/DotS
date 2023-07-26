@@ -1,5 +1,6 @@
-from service_layer import services
 import pytest
+
+from service_layer import services
 
 
 def test_returns_order(spread, fake_repo):
@@ -52,3 +53,78 @@ def test_next_orders_on_init_witions(
     assert sell_order.sell is True
     assert sell_order.price == s_prices
     assert sell_order.amount == s_amount
+
+
+def test_correct_sell_order_on_max_init_without_positions(
+    spread_creds, fake_repo
+):
+    repo = fake_repo([])
+    services.add_spread(repo, *spread_creds, open_positions=6)
+    sell_order = services.get_sell_order(repo, spread_creds[0])
+    assert sell_order.spread_id == spread_creds[0]
+    assert sell_order.sell is True
+    assert sell_order.amount == 6
+    assert sell_order.price == 4.5
+
+
+def test_correct_buy_order_on_max_init_without_positions(
+    spread_creds, fake_repo
+):
+    repo = fake_repo([])
+    services.add_spread(repo, *spread_creds, open_positions=-6)
+    sell_order = services.get_buy_order(repo, spread_creds[0])
+    assert sell_order.spread_id == spread_creds[0]
+    assert sell_order.sell is False
+    assert sell_order.amount == 6
+    assert sell_order.price == 0.0
+
+
+def test_correct_orders_after_init_without_open_positions(
+    spread_creds, fake_repo
+):
+    repo = fake_repo([])
+    services.add_spread(repo, *spread_creds)
+    buy_order = services.get_buy_order(repo, spread_creds[0])
+    sell_order = services.get_sell_order(repo, spread_creds[0])
+    assert buy_order.spread_id == spread_creds[0]
+    assert buy_order.sell is False
+    assert buy_order.amount == 3
+    assert buy_order.price == 0.0
+    assert sell_order.spread_id == spread_creds[0]
+    assert sell_order.sell is True
+    assert sell_order.amount == 3
+    assert sell_order.price == 4.5
+
+
+@pytest.mark.parametrize(
+    ('max_pos', 'amounts'),
+    (
+        (9, (4, 3, 2)),
+        (11, (5, 3, 3)),
+        (100, (50, 33, 17)),
+        (999, (499, 333, 167)),
+        (3, (1, 1, 1)),
+        (4, (2, 1, 1)),
+        (6, (3, 2, 1)),
+        (10, (5, 3, 2)),
+    ),
+)
+def test_generate_order_is_correct_with_various_max_pos(
+    max_pos, amounts, fake_repo
+):
+    repo = fake_repo([])
+    b_spread_creds = ('b', [2.0, 0.0, 1.0], [5, 4, 6], max_pos)
+    s_spread_creds = ('s', [2.0, 0.0, 1.0], [5, 4, 6], max_pos)
+    services.add_spread(repo, *b_spread_creds)
+    services.add_spread(repo, *s_spread_creds)
+
+    for a in amounts:
+        s_order = services.get_sell_order(repo, s_spread_creds[0])
+        assert s_order.amount == a
+        services.update_open_positions(
+            repo, s_spread_creds[0], -s_order.amount
+        )
+
+        b_order = services.get_buy_order(repo, b_spread_creds[0])
+        assert b_order.amount == a
+        services.update_open_positions(repo, b_spread_creds[0], b_order.amount)

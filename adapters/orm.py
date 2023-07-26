@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, MetaData, String, Table, create_engine, Column
+from sqlalchemy import Column, Integer, MetaData, String, Table, create_engine
 from sqlalchemy.orm import DeclarativeBase, registry, sessionmaker
 
 from domain.model import Spread
