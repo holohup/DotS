@@ -1,6 +1,6 @@
 import pytest
-from exceptions import MaxAmountTooSmall
-from domain.model import Spread
+
+from domain.model import MaxAmountTooSmall, Spread
 
 
 @pytest.mark.parametrize('max_amount', (-5, -1, 0, 1, 2))

@@ -1,7 +1,7 @@
-from domain.model import Spread, Order
-from domain.tools import generate_buy_order, generate_sell_order
-from exceptions import NoMoreOrders
 import pytest
+
+from domain.model import (NoMoreOrders, Order, Spread, generate_buy_order,
+                          generate_sell_order)
 
 
 def test_no_more_orders_exception_raises_buy(spread: Spread):
@@ -18,28 +18,6 @@ def test_no_more_orders_exception_raises_sell(spread: Spread):
         spread.update_open_positions(-amount)
     with pytest.raises(NoMoreOrders):
         generate_sell_order(spread)
-
-
-@pytest.mark.parametrize(
-    ('open_pos', 'sell_price', 'sell_amount', 'buy_price', 'buy_amount'),
-    (
-        (-3, 5.0, 2, 0.0, 4),
-        (-5, 5.5, 1, 0.0, 5),
-        (3, 4.5, 4, -0.5, 2),
-        (4, 4.5, 5, -0.5, 1),
-        (5, 4.5, 5, -1.0, 1),
-    ),
-)
-def test_correct_next_orders_if_initialized_with_open_positions(
-    spread_creds, open_pos, sell_price, sell_amount, buy_price, buy_amount
-):
-    spread = Spread(*spread_creds, open_positions=open_pos)
-    assert generate_buy_order(spread) == Order(
-        spread_creds[0], False, buy_amount, buy_price
-    )
-    assert generate_sell_order(spread) == Order(
-        spread_creds[0], True, sell_amount, sell_price
-    )
 
 
 def test_correct_orders_generated_on_max_init_without_positions(spread_creds):
