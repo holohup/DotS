@@ -1,5 +1,6 @@
 from adapters.repository import AbstractRepository
 from domain.model import Spread, generate_buy_order, generate_sell_order
+from service_layer import messagebus
 
 
 class SpreadNotFound(Exception):
@@ -35,3 +36,4 @@ def add_spread(
 def update_open_positions(repo, spread_id, amount):
     spread = repo.get(spread_id)
     spread.update_open_positions(amount)
+    messagebus.handle(spread.events)

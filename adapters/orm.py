@@ -1,11 +1,7 @@
 from sqlalchemy import Column, Integer, MetaData, String, Table, create_engine
-from sqlalchemy.orm import DeclarativeBase, registry, sessionmaker
+from sqlalchemy.orm import registry, sessionmaker
 
 from domain.model import Spread
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 metadata = MetaData()
@@ -34,8 +30,3 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 start_mappers()
-
-# s = Spread('aaa', [1, 2, 3], [5,6,7], 6)
-
-# session.add(s)
-# session.commit()

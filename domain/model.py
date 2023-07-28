@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from domain.tools import generate_order_id
+from domain import events
 
 
 class MaxAmountTooSmall(Exception):
@@ -48,9 +49,13 @@ class Spread:
         self.max_amount = max_amount
         self.open_positions = open_positions
         self._validate_fields()
+        self.events = []
 
     def update_open_positions(self, amount):
         self.open_positions += amount
+        self.events.append(
+            events.OpenPositionsUpdated(self.spread_id, self.open_positions)
+        )
 
     def _validate_fields(self):
         if self.max_amount < 3:

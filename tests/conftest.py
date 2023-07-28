@@ -4,7 +4,7 @@ import pytest
 
 from adapters import repository
 from domain.model import Spread
-from domain.tools import generate_spread_id
+from entrypoints.bootstrap import generate_spread_id
 
 
 @pytest.fixture
