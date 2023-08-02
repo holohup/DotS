@@ -1,32 +1,34 @@
-from sqlalchemy import Column, Integer, MetaData, String, Table, create_engine
-from sqlalchemy.orm import registry, sessionmaker
+# from sqlalchemy import Column, Integer, MetaData, String, Table,
+# create_engine
 
-from domain.model import Spread
+# from sqlalchemy.orm import registry, sessionmaker
 
-
-metadata = MetaData()
-mapper_registry = registry()
+# from domain.model import Spread
 
 
-spreads_table = Table(
-    'spreads',
-    mapper_registry.metadata,
-    Column('spread_id', Integer, primary_key=True),
-    Column('buy_prices', String(255)),
-    Column('sell_prices', String(255)),
-    Column('max_amount', Integer, nullable=False),
-    Column('open_positions', Integer),
-)
-spreads_table.metadata
+# metadata = MetaData()
+# mapper_registry = registry()
 
 
-def start_mappers():
-    mapper_registry.map_imperatively(Spread, spreads_table)
+# spreads_table = Table(
+#     'spreads',
+#     mapper_registry.metadata,
+#     Column('spread_id', Integer, primary_key=True),
+#     Column('buy_prices', String(255)),
+#     Column('sell_prices', String(255)),
+#     Column('max_amount', Integer, nullable=False),
+#     Column('open_positions', Integer),
+# )
+# spreads_table.metadata
 
 
-engine = create_engine('sqlite:///DotS.db', echo=True)
-spreads_table.metadata.create_all(bind=engine)
-Session = sessionmaker(bind=engine)
-session = Session()
+# def start_mappers():
+#     mapper_registry.map_imperatively(Spread, spreads_table)
 
-start_mappers()
+
+# engine = create_engine('sqlite:///DotS.db', echo=True)
+# spreads_table.metadata.create_all(bind=engine)
+# Session = sessionmaker(bind=engine)
+# session = Session()
+
+# start_mappers()

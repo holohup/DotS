@@ -1,5 +1,6 @@
-from domain.orderbook import OrderBook, OrderBookDelta
 import pytest
+
+from domain.orderbook import OrderBook, OrderBookDelta
 
 
 @pytest.mark.parametrize(

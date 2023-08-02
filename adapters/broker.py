@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+
 from adapters.api import ib
 
 
@@ -22,32 +23,35 @@ class IBContractParams(ContractParams):
 
 
 class Broker(ABC):
-    pass
-    # def __init__(self) -> None:
-    #     self._config = config
-    #     self.setup()
+    def __init__(self, near_ob, next_ob) -> None:
+        self._near_ob = near_ob
+        self._next_ob = next_ob
+        self._api = self._get_api()
+        self._contracts = []
 
-    # @abstractmethod
-    # def setup(self):
-    #     pass
+    def register_contracts(self, cfg1, cfg2):
+        self._contracts.extend([cfg1, cfg2])
 
-    # @abstractmethod
-    # def subscribe_to_prices(ob):
-    #     pass
+    def subscribe(self):
+        self._api.subscribe(self._near_ob, self._next_ob, self._contracts)
+
+    @abstractmethod
+    def _get_api(self):
+        pass
+
+    @abstractmethod
+    def connect(self):
+        pass
 
 
 class TCSBroker(Broker):
-
     def subscribe_to_prices(self, ob):
         pass
 
 
 class IBBroker(Broker):
-    def __init__(self) -> None:
-        self._api = ib.IBApi()
-        # self._watcher = ib.IBWatcher()
+    def _get_api(self):
+        return ib.IBApi()
 
-    def subscribe_to_prices(self, ob):
-        pass
-
-
+    def connect(self):
+        self._api.connect('127.0.0.1', 7496, 2)

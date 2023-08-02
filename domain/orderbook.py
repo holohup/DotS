@@ -1,7 +1,12 @@
 class OrderBook:
+    id_counter = 100
+
     def __init__(self, bid=None, ask=None) -> None:
         self.bid = bid
         self.ask = ask
+        self.id = OrderBook.id_counter
+        self.events = []
+        OrderBook.id_counter += 1
 
     def update_bid(self, bid=None):
         if bid is not None:

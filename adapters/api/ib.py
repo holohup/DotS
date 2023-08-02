@@ -1,40 +1,56 @@
-from ibapi.wrapper import EWrapper
-from ibapi.client import EClient
 import threading
 import time
-from abc import ABC, abstractmethod
+
+from ibapi.client import EClient
+from ibapi.contract import Contract
+from ibapi.wrapper import EWrapper
 
 
 class IBApi(EWrapper, EClient):
     def __init__(self):
-    # self.ob = ob
-    # self.cache = cache
-    # self.next_order_id = next_order_id
         EClient.__init__(self, self)
 
-
-
-class Watcher(ABC):
-    @abstractmethod
-    def subscribe_to_prices(self):
-        pass
-
-
-class IBWatcher(Watcher):
-    def __init__(self, ib, contracts: list) -> None:
-        self.ib = ib
-        self.contract = contracts
+    def subscribe(self, ob1, ob2, cfgs):
+        self._near_ob = ob1
+        self._next_ob = ob2
         thread = threading.Thread(
-            target=self.run_loop, daemon=True, name="ibkr"
+            target=self._run_loop, daemon=True, name="ibkr"
         )
         thread.start()
-        self.subscribe_to_prices()
+        self._subscribe_to_prices(cfgs)
 
-    def run_loop(self):
-        self.ib.run()
+    def _run_loop(self):
+        self.run()
 
-    def subscribe_to_prices(self):
+    def _subscribe_to_prices(self, cfgs):
         time.sleep(1)
-        self.ib.reqMarketDataType(1)
-        for contract in self.contracts:
-            self.ib.reqMktData(1, contract, "", False, 0, [])
+        self._near_contract, self._next_contract = Contract(), Contract()
+        print(cfgs)
+        for f in (
+            'exchange',
+            'symbol',
+            'currency',
+            'secType',
+            'lastTradeDateOrContractMonth',
+        ):
+            setattr(self._near_contract, f, getattr(cfgs[0], f))
+            setattr(self._next_contract, f, getattr(cfgs[1], f))
+        self.reqMarketDataType(1)
+        self.reqMktData(
+            self._near_ob.id, self._near_contract, "", False, 0, []
+        )
+        self.reqMktData(
+            self._next_ob.id, self._next_contract, "", False, 0, []
+        )
+
+    def tickPrice(self, req_id, tickType, price, attrib):
+        if req_id == self._near_ob.id:
+            ob = self._near_ob
+        elif req_id == self._next_ob.id:
+            ob = self._next_ob
+        else:
+            return
+        if tickType == 1:
+            ob.update_bid(price)
+        elif tickType == 2:
+            ob.update_ask(price)
