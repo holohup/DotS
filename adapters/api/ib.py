@@ -9,6 +9,8 @@ from ibapi.wrapper import EWrapper
 class IBApi(EWrapper, EClient):
     def __init__(self):
         EClient.__init__(self, self)
+        self._near_ob = None
+        self._next_ob = None
 
     def subscribe(self, ob1, ob2, cfgs):
         self._near_ob = ob1

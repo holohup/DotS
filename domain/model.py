@@ -61,17 +61,7 @@ def generate_sell_order(spread: Spread) -> Order:
     total_amount = spread.max_amount + spread.open_positions
     prices = spread.sell_prices
 
-    if total_amount >= spread.max_amount:
-        amount = total_amount // 2
-        price = prices[0]
-    else:
-        if total_amount < 1:
-            raise NoMoreOrders('No more orders.')
-
-        amount, price = get_amount_and_price_with_lesser_amount(
-            spread.max_amount, total_amount, prices
-        )
-
+    amount, price = amount_and_price(spread, total_amount, prices)
     return Order(spread.spread_id, True, amount, price, generate_order_id())
 
 
@@ -79,6 +69,11 @@ def generate_buy_order(spread: Spread) -> Order:
     total_amount = spread.max_amount - spread.open_positions
     prices = spread.buy_prices
 
+    amount, price = amount_and_price(spread, total_amount, prices)
+    return Order(spread.spread_id, False, amount, price, generate_order_id())
+
+
+def amount_and_price(spread, total_amount, prices):
     if total_amount >= spread.max_amount:
         amount = total_amount // 2
         price = prices[0]
@@ -90,7 +85,7 @@ def generate_buy_order(spread: Spread) -> Order:
             spread.max_amount, total_amount, prices
         )
 
-    return Order(spread.spread_id, False, amount, price, generate_order_id())
+    return amount, price
 
 
 def get_amount_and_price_with_lesser_amount(max_amount, total_amount, prices):
