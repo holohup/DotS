@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import OrderedDict
 from tinkoff.invest.utils import quotation_to_decimal
 from config import TCS_RO_TOKEN, TCS_RW_TOKEN, TCS_ACCOUNT_ID
@@ -11,7 +12,7 @@ import time
 from tinkoff.invest import (
     OrderDirection,
     OrderType,
-    # OrderExecutionReportStatus as OERS,
+    OrderExecutionReportStatus as OERS,
 )
 from datetime import datetime
 from adapters.api.tradingtime import TradingTime
@@ -110,7 +111,43 @@ class TCSApi:
                 order_type=OrderType.ORDER_TYPE_MARKET,
                 order_id=str(datetime.utcnow().timestamp()),
             )
-            id = r.order_id
+        id = r.order_id
+        if (
+            r
+            and r.execution_report_status
+            == OERS.EXECUTION_REPORT_STATUS_FILL
+        ):
+            with Client(token=TCS_RO_TOKEN) as client:
+                r = client.orders.get_order_state(
+                    account_id=TCS_ACCOUNT_ID, order_id=id
+                )
+                i_info = client.instruments.get_futures_margin(
+                    figi=figi
+                )
+            min_price_increment = quotation_to_decimal(
+                i_info.min_price_increment
+            )
+            min_price_increment_amount = quotation_to_decimal(
+                i_info.min_price_increment_amount
+            )
+            usd_to_rub_rate = (
+                min_price_increment_amount / min_price_increment
+            ) / Decimal('100')
+            comission = quotation_to_decimal(r.executed_commission)
+            comission_in_usd = float(comission / usd_to_rub_rate)
+            average_position_price = quotation_to_decimal(
+                r.average_position_price
+            )
+
+            price_in_pt = float(
+                average_position_price
+                / (min_price_increment_amount / min_price_increment)
+            )
+            message = (
+                f'TCS order filled: {amount} for {price_in_pt}, comission:'
+                f' {comission_in_usd}, direction: {direction}'
+            )
+            print(message)
 
     def buy(self, amount, next):
         figi = self._get_figi(next)

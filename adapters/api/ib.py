@@ -5,6 +5,8 @@ from ibapi.client import EClient
 from ibapi.contract import Contract
 from ibapi.order import Order
 from ibapi.wrapper import EWrapper
+from ibapi.execution import Execution
+from ibapi.common import TickerId
 
 
 class IBApi(EWrapper, EClient):
@@ -91,3 +93,19 @@ class IBApi(EWrapper, EClient):
     def nextValidId(self, orderId: int):
         self.next_order_id = orderId
         print(f'new order id received: {orderId}')
+
+    def execDetails(
+        self, reqId: int, contract: Contract, execution: Execution
+    ):
+        id = execution.orderId
+        filled = int(execution.shares)
+        message = f'IB executed order {id}: {filled} for {execution.price}'
+        print(message)
+
+    def error(self, reqId: TickerId, errorCode: int, errorString: str):
+        print(f'TWS error: {reqId=} {errorCode=}, {errorString=}')
+        if errorCode in (2103, 2108, 2110, 1100, 504, 502):
+            self.self._near_ob.update_ask(None)
+            self.self._near_ob.update_bid(None)
+            self.self._next_ob.update_ask(None)
+            self.self._next_ob.update_bid(None)
