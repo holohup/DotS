@@ -1,3 +1,4 @@
+from typing import OrderedDict
 from tinkoff.invest.utils import quotation_to_decimal
 from config import TCS_RO_TOKEN
 from tinkoff.invest import OrderBookInstrument, RequestError
@@ -18,7 +19,9 @@ class TCSApi:
     def subscribe(self, ob1, ob2, cfgs):
         self._near_ob = ob1
         self._next_ob = ob2
-        self._orderbooks = {cfgs[0].figi: ob1, cfgs[1].figi: ob2}
+        self._orderbooks = OrderedDict()
+        self._orderbooks[cfgs[0].figi] = ob1
+        self._orderbooks[cfgs[1].figi] = ob2
         thread = threading.Thread(
             target=self._subscribe_to_prices, daemon=True, name="tcs"
         )

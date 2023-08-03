@@ -53,3 +53,6 @@ class OrderBookDelta:
     def update(self) -> None:
         if self._trader is not None:
             self._trader.trade_cycle()
+
+    def __repr__(self) -> str:
+        return f'{self.m_book=}, {self.t_book=}'
