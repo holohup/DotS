@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from adapters.api import ib
+from adapters.api import ib, tcs
 
 
 class ContractParams:
@@ -45,7 +45,10 @@ class Broker(ABC):
 
 
 class TCSBroker(Broker):
-    def subscribe_to_prices(self, ob):
+    def _get_api(self):
+        return tcs.TCSApi()
+
+    def connect(self):
         pass
 
 

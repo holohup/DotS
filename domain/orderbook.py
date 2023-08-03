@@ -8,11 +8,11 @@ class OrderBook:
         OrderBook.id_counter += 1
 
     def update_bid(self, bid=None):
-        if bid is not None:
+        if bid is not None and bid != self.bid:
             self.bid = bid
 
     def update_ask(self, ask=None):
-        if ask is not None:
+        if ask is not None and ask != self.ask:
             self.ask = ask
 
 

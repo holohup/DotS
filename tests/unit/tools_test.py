@@ -1,8 +1,10 @@
-import pytest
-from domain import tools
 from datetime import datetime
-from config import MIN_MARGIN, CONTRACTS_IN_MAKE
+
+import pytest
 from dateutil.relativedelta import relativedelta
+
+from config import CONTRACTS_IN_MAKE, MIN_MARGIN
+from domain import tools
 
 
 def test_correct_spread_id_is_generated():

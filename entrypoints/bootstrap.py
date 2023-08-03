@@ -1,9 +1,15 @@
 from typing import NamedTuple
 
 import config
-from adapters.broker import (Broker, ContractParams, IBBroker,
-                             IBContractParams, TCSBroker, TCSContractParams)
-from domain.orderbook import OrderBook
+from adapters.broker import (
+    Broker,
+    ContractParams,
+    IBBroker,
+    IBContractParams,
+    TCSBroker,
+    TCSContractParams,
+)
+from domain.orderbook import OrderBook, OrderBookDelta
 
 
 class BrokerCreds(NamedTuple):
@@ -17,16 +23,23 @@ BROKER_HANDLERS = {
 }
 
 
+def connect_and_subscribe(ob1, ob2, broker_name, specs):
+    broker = BROKER_HANDLERS[broker_name].broker_class(ob1, ob2)
+    near_config = BROKER_HANDLERS[broker_name].contract_params(
+        **config.near_spread[specs]
+    )
+    next_config = BROKER_HANDLERS[broker_name].contract_params(
+        **config.next_spread[specs]
+    )
+    broker.register_contracts(near_config, next_config)
+    broker.connect()
+    broker.subscribe()
+
+
 near_maker_ob, next_maker_ob = OrderBook(), OrderBook()
-make_broker = BROKER_HANDLERS[config.MAKE_BROKER].broker_class(
-    near_maker_ob, next_maker_ob
-)
-near_maker_config = BROKER_HANDLERS[config.MAKE_BROKER].contract_params(
-    **config.near_spread['make_specs']
-)
-next_maker_config = BROKER_HANDLERS[config.MAKE_BROKER].contract_params(
-    **config.next_spread['make_specs']
-)
-make_broker.register_contracts(near_maker_config, next_maker_config)
-make_broker.connect()
-make_broker.subscribe()
+connect_and_subscribe(near_maker_ob, next_maker_ob, config.MAKE_BROKER, 'make_specs')
+near_taker_ob, next_taker_ob = OrderBook(), OrderBook()
+connect_and_subscribe(near_taker_ob, next_taker_ob, config.TAKE_BROKER, 'take_specs')
+
+near_ob_delta = OrderBookDelta(near_maker_ob, near_taker_ob)
+next_ob_delta = OrderBookDelta(next_maker_ob, next_taker_ob)

@@ -1,6 +1,7 @@
 import uuid
-from datetime import datetime, timedelta
-from config import MIN_MARGIN, CONTRACTS_IN_MAKE
+from datetime import datetime
+
+from config import CONTRACTS_IN_MAKE, MIN_MARGIN
 
 
 def generate_order_id():
