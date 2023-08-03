@@ -60,11 +60,11 @@ def generate_spread(conf):
 
 
 near_maker_ob, next_maker_ob = OrderBook(), OrderBook()
-make_broker = connect_and_subscribe(
+make_broker: Broker = connect_and_subscribe(
     near_maker_ob, next_maker_ob, config.MAKE_BROKER, 'make_specs'
 )
 near_taker_ob, next_taker_ob = OrderBook(), OrderBook()
-take_broker = connect_and_subscribe(
+take_broker: Broker = connect_and_subscribe(
     near_taker_ob, next_taker_ob, config.TAKE_BROKER, 'take_specs'
 )
 
@@ -78,7 +78,11 @@ next_taker_ob.register_delta(next_ob_delta)
 
 near_spread = generate_spread(config.near_spread)
 next_spread = generate_spread(config.next_spread)
-
+near_pos, next_pos = take_broker.get_positions()
+if near_pos != 0:
+    near_spread.update_open_positions(near_pos // config.TAKE_TO_MAKE_RATIO)
+if next_pos != 0:
+    next_spread.update_open_positions(next_pos // config.TAKE_TO_MAKE_RATIO)
 
 near_trader = Trader(
     near_ob_delta, make_broker, take_broker, near_spread, next=False

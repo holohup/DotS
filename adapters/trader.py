@@ -6,6 +6,7 @@ from domain.model import (
 )
 from domain.orderbook import OrderBookDelta
 from domain.model import Spread
+from config import TAKE_TO_MAKE_RATIO
 
 
 class Trader:
@@ -60,7 +61,9 @@ class Trader:
         print(f'{self._next=}')
         print('sell_spread')
         print('buy_maker')
+        self._mb.buy(amount, self._next)
         print('sell_taker * ratio')
+        self._tb.sell(amount * TAKE_TO_MAKE_RATIO, self._next)
         print('update_spread')
         self._spread.update_open_positions(-amount)
         print('get_orders')
@@ -71,7 +74,9 @@ class Trader:
         print(f'{self._next=}')
         print('buy_spread')
         print('sell_maker')
+        self._mb.sell(amount, self._next)
         print('buy_taker * ratio')
+        self._tb.buy(amount * TAKE_TO_MAKE_RATIO, self._next)
         print('update_spread')
         self._spread.update_open_positions(amount)
         print('get_orders')

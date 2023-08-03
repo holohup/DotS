@@ -3,6 +3,7 @@ import time
 
 from ibapi.client import EClient
 from ibapi.contract import Contract
+from ibapi.order import Order
 from ibapi.wrapper import EWrapper
 
 
@@ -11,6 +12,7 @@ class IBApi(EWrapper, EClient):
         EClient.__init__(self, self)
         self._near_ob = None
         self._next_ob = None
+        self.next_order_id = None
 
     def subscribe(self, ob1, ob2, cfgs):
         self._near_ob = ob1
@@ -27,7 +29,6 @@ class IBApi(EWrapper, EClient):
     def _subscribe_to_prices(self, cfgs):
         time.sleep(1)
         self._near_contract, self._next_contract = Contract(), Contract()
-        print(cfgs)
         for f in (
             'exchange',
             'symbol',
@@ -45,6 +46,36 @@ class IBApi(EWrapper, EClient):
             self._next_ob.id, self._next_contract, "", False, 0, []
         )
 
+    def buy(self, amount, next):
+        contract = self._get_contract(next)
+        order = self._generate_market_order(amount)
+        order.action = 'BUY'
+        o_id = self.next_order_id
+        self.placeOrder(o_id, contract, order)
+        self.next_order_id += 1
+
+    def sell(self, amount, next):
+        contract = self._get_contract(next)
+        order = self._generate_market_order(amount)
+        order.action = 'SELL'
+        o_id = self.next_order_id
+        self.placeOrder(o_id, contract, order)
+        self.next_order_id += 1
+
+    def _get_contract(self, next: bool):
+        if next is True:
+            return self._next_contract
+        return self._near_contract
+
+    def _generate_market_order(self, amount):
+        order = Order()
+        order.orderType = 'MKT'
+        order.totalQuantity = amount
+        order.eTradeOnly = False
+        order.firmQuoteOnly = False
+        order.orderId = self.next_order_id
+        return order
+
     def tickPrice(self, req_id, tickType, price, attrib):
         if req_id == self._near_ob.id:
             ob = self._near_ob
@@ -56,3 +87,7 @@ class IBApi(EWrapper, EClient):
             ob.update_bid(price)
         elif tickType == 2:
             ob.update_ask(price)
+
+    def nextValidId(self, orderId: int):
+        self.next_order_id = orderId
+        print(f'new order id received: {orderId}')

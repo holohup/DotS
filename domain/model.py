@@ -51,6 +51,10 @@ class Spread:
 
     def update_open_positions(self, amount):
         self.open_positions += amount
+        print(
+            f'position for {self.spread_id} updated by {amount}, '
+            f'{self.open_positions=}'
+        )
 
     def _validate_fields(self):
         if self.max_amount < 3:

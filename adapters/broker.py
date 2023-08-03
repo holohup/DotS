@@ -43,6 +43,15 @@ class Broker(ABC):
     def connect(self):
         pass
 
+    def buy(self, amount, next):
+        self._api.buy(amount, next)
+
+    def sell(self, amount, next):
+        self._api.sell(amount, next)
+
+    def get_positions(self):
+        return self._api.get_open_positions()
+
 
 class TCSBroker(Broker):
     def _get_api(self):
