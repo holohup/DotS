@@ -32,6 +32,10 @@ class Order:
     def __hash__(self) -> int:
         return hash(self.order_id)
 
+    def __repr__(self) -> str:
+        sell = 'sell' if self.sell else 'buy'
+        return f'{self.spread_id}: {sell} {self.amount} for {self.price}'
+
 
 class Spread:
     def __init__(

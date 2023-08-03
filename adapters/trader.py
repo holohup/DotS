@@ -16,7 +16,7 @@ class Trader:
         make_broker,
         take_broker,
         spread: Spread,
-        next: bool
+        next: bool,
     ) -> None:
         self._delta = ob_delta
         self._mb = make_broker
@@ -36,11 +36,19 @@ class Trader:
             self._sell_order = generate_sell_order(self._spread)
         except NoMoreOrders:
             self._sell_order = None
-        print(f'got new orders. {self._buy_order=}, {self._sell_order=}')
+        print(f'got new orders. {self._buy_order}, {self._sell_order}')
 
     def trade_cycle(self):
         bd = self._delta.buy_delta
         sd = self._delta.sell_delta
+        print(
+            ' ',
+            self._spread.spread_id,
+            self._delta.buy_delta,
+            self._delta.sell_delta,
+            '           ',
+            end='\r',
+        )
         if (
             bd is not None
             and self._buy_order is not None
@@ -58,26 +66,14 @@ class Trader:
 
     def _sell_spread(self):
         amount = self._sell_order.amount
-        print(f'{self._next=}')
-        print('sell_spread')
-        print('buy_maker')
         self._mb.buy(amount, self._next)
-        print('sell_taker * ratio')
         self._tb.sell(amount * TAKE_TO_MAKE_RATIO, self._next)
-        print('update_spread')
         self._spread.update_open_positions(-amount)
-        print('get_orders')
         self._get_orders()
 
     def _buy_spread(self):
         amount = self._buy_order.amount
-        print(f'{self._next=}')
-        print('buy_spread')
-        print('sell_maker')
         self._mb.sell(amount, self._next)
-        print('buy_taker * ratio')
         self._tb.buy(amount * TAKE_TO_MAKE_RATIO, self._next)
-        print('update_spread')
         self._spread.update_open_positions(amount)
-        print('get_orders')
         self._get_orders()

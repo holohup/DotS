@@ -2,3 +2,4 @@ pytest>=7.4.0
 python-dotenv>=1.0.0
 tinkoff-investments>=0.2.0b57
 ibapi>=9.81.1.post1
+python-telegram-bot>=13.7

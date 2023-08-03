@@ -11,9 +11,10 @@ import time
 from tinkoff.invest import (
     OrderDirection,
     OrderType,
-    OrderExecutionReportStatus as OERS,
+    # OrderExecutionReportStatus as OERS,
 )
 from datetime import datetime
+from adapters.api.tradingtime import TradingTime
 
 
 class TCSApi:
@@ -22,6 +23,7 @@ class TCSApi:
         self._next_ob = None
         self._orderbooks = OrderedDict()
         self.market_data_stream: MarketDataStreamManager = None
+        self._trading_time = TradingTime()
 
     def subscribe(self, ob1, ob2, cfgs):
         self._near_ob = ob1
@@ -50,7 +52,7 @@ class TCSApi:
                     elif e.code == StatusCode.CANCELLED:
                         retry_time = e.metadata.ratelimit_reset
                     self._set_orderbooks_to_none()
-                    self.stop_stream()
+                    self._stop_stream()
                     time.sleep(retry_time)
                     print('trying to reconnect to stream...')
 
@@ -61,12 +63,11 @@ class TCSApi:
 
     def receive_orderbook(self):
         for marketdata in self.market_data_stream:
-            # if not self.trading_time.is_trading_now:
-            #     self.wait_till_trading_starts()
-            #     break
+            if not self._trading_time.is_trading_now:
+                self._wait_till_trading_starts()
+                break
             ob = marketdata.orderbook
             if not ob or not ob.bids or not ob.asks:
-                print('not statement')
                 self._set_orderbooks_to_none()
                 continue
             bid = float(
@@ -78,7 +79,7 @@ class TCSApi:
             self._orderbooks[ob.figi].update_ask(ask)
             self._orderbooks[ob.figi].update_bid(bid)
 
-    def stop_stream(self):
+    def _stop_stream(self):
         if self.market_data_stream:
             print('stopping stream')
             self.market_data_stream.stop()
@@ -109,7 +110,6 @@ class TCSApi:
                 order_type=OrderType.ORDER_TYPE_MARKET,
                 order_id=str(datetime.utcnow().timestamp()),
             )
-            print(f'market order posted. details: {r.message=}')
             id = r.order_id
 
     def buy(self, amount, next):
@@ -134,3 +134,11 @@ class TCSApi:
             if list(self._orderbooks.keys())[1] == pos.figi:
                 next_pos = pos.balance
         return near_pos, next_pos
+
+    def _wait_till_trading_starts(self):
+        sleep_time = self._trading_time.seconds_till_trading_starts
+        self._set_orderbooks_to_none()
+        self._stop_stream()
+        print(f'Not a trading time, waiting {sleep_time // 60} minutes')
+        time.sleep(sleep_time)
+        print('Resuming trading')
