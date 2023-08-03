@@ -18,8 +18,7 @@ class TCSApi:
     def subscribe(self, ob1, ob2, cfgs):
         self._near_ob = ob1
         self._next_ob = ob2
-        self._cfgs = cfgs
-        self._orderbooks = {cfgs[0]: ob1, cfgs[1]: ob2}
+        self._orderbooks = {cfgs[0].figi: ob1, cfgs[1].figi: ob2}
         thread = threading.Thread(
             target=self._subscribe_to_prices, daemon=True, name="tcs"
         )
@@ -41,16 +40,20 @@ class TCSApi:
                         retry_time = 60
                     elif e.code == StatusCode.CANCELLED:
                         retry_time = e.metadata.ratelimit_reset
-                    self.order_book.stream_interrupted = True
-                    self.order_book.wait_time = retry_time
-                    self.order_book.update_ask(-1.0)
-                    self.order_book.update_bid(-1.0)
+                    # self.order_book.stream_interrupted = True
+                    # self.order_book.wait_time = retry_time
+                    self._set_orderbooks_to_none()
                     self.stop_stream()
                     time.sleep(retry_time)
                     print('trying to reconnect to stream...')
 
+    def _set_orderbooks_to_none(self):
+        for ob in self._orderbooks.values():
+            ob.update_bid(None)
+            ob.update_ask(None)
+
     def receive_orderbook(self):
-        old_near_ask = old_near_bid = old_next_ask = old_next_bid = 0
+        # old_near_ask = old_near_bid = old_next_ask = old_next_bid = 0
         for marketdata in self.market_data_stream:
             # if not self.trading_time.is_trading_now:
             #     self.wait_till_trading_starts()
@@ -58,8 +61,7 @@ class TCSApi:
             ob = marketdata.orderbook
             if not ob or not ob.bids or not ob.asks:
                 print('not statement')
-                self.order_book.update_ask(None)
-                self.order_book.update_bid(None)
+                self._set_orderbooks_to_none()
                 continue
             bid = float(
                 quotation_to_decimal(marketdata.orderbook.bids[0].price)
@@ -69,7 +71,6 @@ class TCSApi:
             )
             self._orderbooks[ob.figi].update_ask(ask)
             self._orderbooks[ob.figi].update_bid(bid)
-            print(self._orderbooks)
 
     def stop_stream(self):
         if self.market_data_stream:
@@ -81,6 +82,7 @@ class TCSApi:
         self.market_data_stream = client.create_market_data_stream()
         self.market_data_stream.order_book.subscribe(
             instruments=[
-                OrderBookInstrument(figi=figi, depth=1) for figi in self._cfgs
+                OrderBookInstrument(figi=figi, depth=1)
+                for figi in self._orderbooks.keys()
             ]
         )

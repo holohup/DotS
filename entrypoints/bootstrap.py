@@ -43,3 +43,7 @@ connect_and_subscribe(near_taker_ob, next_taker_ob, config.TAKE_BROKER, 'take_sp
 
 near_ob_delta = OrderBookDelta(near_maker_ob, near_taker_ob)
 next_ob_delta = OrderBookDelta(next_maker_ob, next_taker_ob)
+near_maker_ob.register_delta(near_ob_delta)
+near_taker_ob.register_delta(near_ob_delta)
+next_maker_ob.register_delta(next_ob_delta)
+next_taker_ob.register_delta(next_ob_delta)
