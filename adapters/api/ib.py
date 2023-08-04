@@ -105,7 +105,7 @@ class IBApi(EWrapper, EClient):
     def error(self, reqId: TickerId, errorCode: int, errorString: str):
         print(f'TWS error: {reqId=} {errorCode=}, {errorString=}')
         if errorCode in (2103, 2108, 2110, 1100, 504, 502):
-            self.self._near_ob.update_ask(None)
-            self.self._near_ob.update_bid(None)
-            self.self._next_ob.update_ask(None)
-            self.self._next_ob.update_bid(None)
+            self._near_ob.update_ask(None)
+            self._near_ob.update_bid(None)
+            self._next_ob.update_ask(None)
+            self._next_ob.update_bid(None)
