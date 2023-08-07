@@ -26,6 +26,7 @@ class Trader:
         self._sell_order: Order = None
         self._buy_order: Order = None
         self._get_orders()
+        self._currently_trading = False
 
     def _get_orders(self):
         try:
@@ -53,6 +54,7 @@ class Trader:
             bd is not None
             and self._buy_order is not None
             and bd <= self._buy_order.price
+            and not self._currently_trading
         ):
             print('buying spread')
             self._buy_spread()
@@ -60,20 +62,25 @@ class Trader:
             sd is not None
             and self._sell_order is not None
             and sd >= self._sell_order.price
+            and not self._currently_trading
         ):
             print('selling spread')
             self._sell_spread()
 
     def _sell_spread(self):
+        self._currently_trading = True
         amount = self._sell_order.amount
         self._mb.buy(amount, self._next)
         self._tb.sell(amount * TAKE_TO_MAKE_RATIO, self._next)
         self._spread.update_open_positions(-amount)
         self._get_orders()
+        self._currently_trading = False
 
     def _buy_spread(self):
+        self._currently_trading = True
         amount = self._buy_order.amount
         self._mb.sell(amount, self._next)
         self._tb.buy(amount * TAKE_TO_MAKE_RATIO, self._next)
         self._spread.update_open_positions(amount)
         self._get_orders()
+        self._currently_trading = False
