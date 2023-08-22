@@ -51,6 +51,12 @@ def generate_spread(conf):
         sell_prices = converted_prices
     else:
         sell_prices = [price / 100 for price in sell_prices]
+    sell_prices = [
+        price
+        if price >= config.MINIMUM_SELL_PRICE
+        else config.MINIMUM_SELL_PRICE
+        for price in sell_prices
+    ]
     buy_prices = [price / 100 for price in conf['buy_prices']]
     return Spread(
         generate_spread_id(conf['symbol'], exp),
